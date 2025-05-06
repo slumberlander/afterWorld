@@ -1,0 +1,1075 @@
+
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>afterWorld</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+      text-align: center;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      font-style: italic;
+      margin-bottom: 1.5rem;
+    }
+
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      opacity: 0;
+      transform: translateY(10px);
+      height: 0;
+      overflow: hidden;
+    }
+
+    .row.visible {
+      opacity: 1;
+      transform: translateY(0);
+      height: auto;
+      overflow: visible;
+      margin-bottom: 1rem;
+    }
+
+    .row label {
+      flex: 1;
+    }
+
+    input {
+      padding: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      background-color: #0984e3;
+      color: white;
+      border: 2px solid #0652DD;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      margin-top: 1.5rem;
+    }
+
+    button:disabled {
+      background-color: #b2bec3;
+      border-color: #dfe6e9;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    button:hover:enabled {
+      background-color: #0c6cc3;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    #validerBtn {
+      display: block;
+      margin: 2rem auto 0 auto;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    #validerBtn.visible {
+      opacity: 1;
+    }
+
+    .result {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    #popup {
+      display: none;
+      position: fixed;
+      top: 20%;
+      right: 5%;
+      background-color: #ffeaa7;
+      color: #2d3436;
+      border: 1px solid #dfe6e9;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      font-weight: bold;
+      max-width: 350px;
+      text-align: center;
+      z-index: 1000;
+    }
+
+    #popup .close-btn {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #d63031;
+      font-size: 18px;
+    }
+
+    .info-italic {
+      font-size: 0.85rem;
+      font-style: italic;
+      margin-top: 0.3rem;
+    }
+    
+    .ticket {
+      border: 2px dashed #333;
+      padding: 2rem;
+      background: white;
+    }
+    
+    .ticket .line {
+      margin: 0.5rem 0;
+    }
+    
+    .ticket-button {
+      margin: 5px;
+      padding: 8px 12px;
+      border-radius: 5px;
+    }
+    
+    .btn-active {
+      background-color: #0984e3;
+      color: white;
+      border: 2px solid #0652DD;
+      cursor: pointer;
+    }
+    
+    .btn-inactive {
+      background-color: #b2bec3;
+      color: #dfe6e9;
+      border: 2px solid #dfe6e9;
+      cursor: not-allowed;
+    }
+    
+    #ticketModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      z-index: 2000;
+      overflow: auto;
+    }
+    
+    .modal-content {
+      position: relative;
+      background-color: white;
+      margin: 10% auto;
+      padding: 20px;
+      max-width: 500px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .share-link {
+      margin-top: 0.3rem;
+      width: 100%;
+      padding: 0.5rem;
+      text-align: center;
+    }
+    
+    /* Styles pour l'affichage du résultat du tirage */
+    #tirageResult {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3000; /* Au-dessus de tous les autres éléments */
+      align-items: center;
+      justify-content: center;
+      font-size: 6rem;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      transition: background-color 0.5s ease;
+    }
+    
+    .tirage-win {
+      background-color: rgba(46, 213, 115, 0.9); /* Vert avec transparence */
+    }
+    
+    .tirage-lose {
+      background-color: rgba(235, 59, 90, 0.9); /* Rouge avec transparence */
+    }
+    
+    #tirageMessage {
+      animation: pulse 1.5s infinite;
+      transform-origin: center;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    #createNewLotoBtn {
+      position: absolute;
+      bottom: 20%;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      background-color: rgba(255, 255, 255, 0.3);
+      border: 2px solid white;
+      color: white;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    #createNewLotoBtn:hover {
+      background-color: rgba(255, 255, 255, 0.5);
+      transform: scale(1.05);
+    }
+    
+    /* Style pour la page d'invitation */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      z-index: 2000;
+      overflow: auto;
+      align-items: center;
+      justify-content: center;
+    }
+   
+    .invitation-content {
+      width: 90%;
+      max-width: 500px;
+    }
+       .marquee-container {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .marquee {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee 35s linear infinite;
+      font-size: 1rem;
+      font-style: italic;
+    }
+
+    @keyframes marquee {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+
+    /* Pause de l'animation au survol (optionnel) */
+    .marquee:hover {
+      animation-play-state: paused;
+    }
+
+    /* Reste des styles inchangés */
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .row label {
+      flex: 1;
+    }
+
+    input {
+      padding: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      background-color: #0984e3;
+      color: white;
+      border: 2px solid #0652DD;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      margin-top: 1.5rem;
+    }
+
+    /* Animation pour faire apparaître les éléments */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .prob-section {
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+      transition: opacity 0.5s ease, height 0.5s ease;
+    }
+
+    .prob-section.visible {
+      opacity: 1;
+      height: auto;
+      margin-top: 1.5rem;
+    }
+
+.share-link-container {
+  padding: 12px;
+  border-radius: 8px;
+  background: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
+  background-size: 1200% 1200%;
+  animation: backgroundGradient 5s ease infinite;
+  margin: 1.5rem auto;
+  max-width: 80%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.share-link {
+  margin: 0;
+  width: 100%;
+  padding: 0.8rem;
+  text-align: center;
+  border: none;
+  border-radius: 5px;
+  background: white;
+  color: #333;
+  font-weight: bold;
+  font-size: 1.1rem;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.share-link:focus {
+  outline: none;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+}
+
+#copyLinkBtn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: #0984e3;
+  color: white;
+  border: 2px solid #0652DD;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+#copyLinkBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+
+    
+/* Style pour le champ de partage avec effet de dégradé clignotant */
+@keyframes backgroundGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.share-link-container {
+  padding: 5px;
+  border-radius: 5px;
+  background: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
+  background-size: 1200% 1200%;
+  animation: backgroundGradient 5s ease infinite;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.share-link {
+  margin-top: 0;
+  width: 100%;
+  padding: 0.5rem;
+  text-align: center;
+  border: none;
+  border-radius: 3px;
+  background: white;
+  color: #333;
+}
+
+#scrollIndicator {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: bounce 2s infinite;
+  z-index: 1000;
+  /* Assurons-nous que c'est visible par défaut */
+  opacity: 1;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  40% {
+    transform: translateX(-50%) translateY(-20px);
+  }
+  60% {
+    transform: translateX(-50%) translateY(-10px);
+  }
+}
+
+.scroll-text {
+  color: #0984e3;
+  font-weight: bold;
+  margin-top: 10px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  /* Améliorer la visibilité du texte */
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </style>
+</head>
+<body>
+
+  <h1>🎲 AfterWorld 🎲</h1>
+  <div class="marquee-container">
+    <div class="marquee">Crée ton loto AfterWorld et gagne des poires grâce à tes amis . D'ici cinq ans, l'avènement d'IA superpuissantes abolira le travail. L'humain, devenu totalement oisif, ne saura même pas à quoi employer son revenu universel. Voici un outil pour l'accompagner dans la dépression...&nbsp;&nbsp;&nbsp;</div>
+  </div>
+  <!-- fleche -->
+  <div id="scrollIndicator">
+  <svg width="80" height="80" viewBox="0 0 80 80">
+    <path d="M40 10 L70 45 L55 45 L55 70 L25 70 L25 45 L10 45 Z" fill="#0984e3" stroke="#0652DD" stroke-width="3"/>
+  </svg>
+  <div class="scroll-text"></div>
+</div>
+
+  <!-- Premier champ toujours visible -->
+  <div class="row visible" id="rowNom">
+    <label>
+      Comment tu t'appelles ?
+      <input type="text" id="nomUtilisateur" placeholder="Ton prénom">
+    </label>
+  </div>
+
+  <!-- Second champ (apparaîtra après avoir rempli le premier) -->
+  <div class="row" id="rowJoueurs">
+    <label>
+      Nombre de joueurs :
+      <input type="number" id="joueurs" min="1" required>
+    </label>
+  </div>
+
+  <!-- Troisième champ (apparaîtra après avoir rempli le second) -->
+  <div class="row" id="rowPrix">
+    <label>
+      Prix du ticket (🍐) :
+      <input type="number" id="prixParJoueur" step="0.01" min="0" required>
+    </label>
+  </div>
+
+  <!-- Quatrième champ (apparaîtra après avoir rempli le troisième) -->
+  <div class="row" id="rowJackpot">
+    <label style="flex: 2;">
+      Montant du jackpot (🍐) :
+      <input type="number" id="jackpot" step="0.01" min="0" required>
+    </label>
+    <button id="provisionnerBtn">Provisionner le jackpot</button>
+  </div>
+
+  <!-- Cinquième champ (apparaîtra après avoir rempli le quatrième) -->
+  <div class="prob-section" id="probSection">
+    <label for="probJackpot" id="probLabel" style="display: block;">
+      Indique (en %) les risques de perdre ton Jackpot:
+    </label>
+    <input type="number" id="probJackpot" step="0.01" min="0" max="100" required style="width: 100%; max-width: 300px;">
+    <div class="info-italic" id="ratioAffichage"></div>
+  </div>
+
+  <div class="result" id="resultat"></div>
+  <div class="result" id="pertes"></div>
+
+  <button id="validerBtn" disabled>Valide et distribue ton loto</button>
+  <div class="info-italic" id="validerInfo" style="display: none;"></div>
+
+  <div id="popup">
+    <span class="close-btn" onclick="document.getElementById('popup').style.display = 'none';">×</span>
+    <span id="popup-message"></span>
+  </div>
+  
+  <!-- Modale pour le ticket de loto -->
+  <div id="ticketModal">
+    <div class="modal-content">
+      <span class="close-btn" style="position: absolute; top: 10px; right: 15px; font-size: 24px; font-weight: bold; cursor: pointer; color: #d63031;" onclick="document.getElementById('ticketModal').style.display = 'none';">×</span>
+      <div id="ticketContent"></div>
+    </div>
+  </div>
+  
+  <!-- Page d'invitation -->
+  <div id="invitationScreen" class="modal-overlay">
+    <div class="modal-content invitation-content">
+      <div class="ticket">
+        <h2> Le loto afterWorld de Schoettz</h2>
+       <div class="marquee-container">
+    <div class="marquee">Plus qu’un simple jeu, une nouvelle vie ! Pour créer votre loto où vous aurez plus de chances de gagner que de perdre, jouez d'abord ce ticket où vous avez plus de chances de perdre que de gagner. ...&nbsp;&nbsp;&nbsp;</div>
+  </div>
+        <div class="line">👥 <strong>20 joueurs</strong></div>
+        <div class="line">🍐 Prix par joueur : <strong>5.00 poires</strong></div>
+        <div class="line">💰 Jackpot : <strong>100.00 poires</strong></div>
+        <div class="line">🎯 Probabilité que le jackpot soit remporté : <strong>25%</strong></div>
+        <div class="line">🧮 Tes chances de gagner sont de : <strong>1.42811%</strong> (1 sur 70)</div>
+        <div class="line">📊 C'est <em>environ 1 997 049 fois plus probable qu'un jackpot à l'Euromillion</em></div>
+        <hr>
+        <div class="line">💸 Schoettz gagne <strong>99.00 poires</strong> si vous perdez tous</div>
+        <div class="line" style="font-size: 0.7rem; color: #888; text-align: center;">Mathieu se sucre 1% à chaque opération</div>
+   
+        <div style="margin-top: 1rem; font-size: 0.9rem; text-align: center;">
+          <label for="partageLienInvitation">Copie ce lien pour partager :</label><br>
+          <input type="text" id="partageLienInvitation" readonly class="share-link"
+            value="www.partage-le-loto-a-schoettz">
+        </div>
+   
+        <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+          <button id="payerBtnInvitation" onclick="toggleInvitationButtons()" class="ticket-button btn-active">payer ce ticket</button>
+          <button id="jouerBtnInvitation" onclick="faireTirageInvitation()" class="ticket-button btn-inactive" disabled>jouez ce tirage et créez votre propre loto</button>
+        </div>
+       
+        <p style="margin-top: 2rem;">Bonne chance ! 🍀</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Nouvel élément pour afficher le résultat du tirage -->
+  <div id="tirageResult">
+    <div id="tirageMessage"></div>
+    <button id="createNewLotoBtn">Créez votre propre Loto</button>
+  </div>
+
+  <script>
+    let popupTimeout;
+    let jackpotProvisionne = false;
+    let compteurJoueurs = 1; // Compteur de joueurs
+    let probaGagner = 0; // Variable pour stocker la probabilité de gagner
+    
+    // Variables pour la page d'invitation
+    let invitationAffichee = false; // Pour suivre si l'invitation a déjà été affichée
+    let invitationJouee = false; // Pour suivre si l'invitation a déjà été jouée
+
+    // Fonction pour afficher les popups
+    function showPopup(message) {
+      const popup = document.getElementById("popup");
+      const popupMessage = document.getElementById("popup-message");
+      popupMessage.innerHTML = message;
+      popup.style.display = "block";
+
+      clearTimeout(popupTimeout);
+      popupTimeout = setTimeout(() => {
+        popup.style.display = "none";
+      }, 10000);
+    }
+    
+    // Fonction pour effectuer un tirage aléatoire
+    function faireTirage() {
+      // Récupérer la probabilité de gagner (en décimal, pas en pourcentage)
+      const randomValue = Math.random(); // Nombre aléatoire entre 0 et 1
+      
+      // Afficher l'élément de résultat
+      const resultElement = document.getElementById('tirageResult');
+      const messageElement = document.getElementById('tirageMessage');
+      
+      // Comparaison : si le nombre aléatoire est inférieur à la probabilité, c'est gagné
+      if (randomValue < probaGagner) {
+        // Victoire !
+        resultElement.classList.add('tirage-win');
+        resultElement.classList.remove('tirage-lose');
+        messageElement.textContent = "BRAVO!";
+      } else {
+        // Défaite
+        resultElement.classList.add('tirage-lose');
+        resultElement.classList.remove('tirage-win');
+        messageElement.textContent = "PERDU!";
+      }
+      
+      // Afficher le résultat
+      resultElement.style.display = "flex";
+      
+      // Désactiver le bouton après avoir joué
+      document.getElementById('jouerBtn').classList.remove('btn-active');
+      document.getElementById('jouerBtn').classList.add('btn-inactive');
+      document.getElementById('jouerBtn').disabled = true;
+    }
+    
+    // Fonction pour basculer entre les boutons d'invitation
+    function toggleInvitationButtons() {
+      const payerBtn = document.getElementById('payerBtnInvitation');
+      const jouerBtn = document.getElementById('jouerBtnInvitation');
+      
+      // Désactiver le bouton payer
+      payerBtn.classList.remove('btn-active');
+      payerBtn.classList.add('btn-inactive');
+      payerBtn.disabled = true;
+      
+      // Activer le bouton jouer
+      jouerBtn.classList.remove('btn-inactive');
+      jouerBtn.classList.add('btn-active');
+      jouerBtn.disabled = false;
+      
+      // Afficher un message dans le popup
+      showPopup("Merci d'avoir payé le ticket ! Vous pouvez maintenant jouer ce tirage.");
+    }
+
+    // Fonction pour effectuer le tirage de l'invitation
+    function faireTirageInvitation() {
+      // Définir la probabilité de gagner pour l'invitation (1.42811%)
+      probaGagner = 0.0142811;
+      
+      // Marquer l'invitation comme jouée
+      invitationJouee = true;
+      
+      // Masquer l'écran d'invitation
+      document.getElementById('invitationScreen').style.display = "none";
+      
+      // Effectuer le tirage comme dans la fonction normale
+      const randomValue = Math.random();
+      const resultElement = document.getElementById('tirageResult');
+      const messageElement = document.getElementById('tirageMessage');
+      
+      if (randomValue < probaGagner) {
+        resultElement.classList.add('tirage-win');
+        resultElement.classList.remove('tirage-lose');
+        messageElement.textContent = "BRAVO!";
+      } else {
+        resultElement.classList.add('tirage-lose');
+        resultElement.classList.remove('tirage-win');
+        messageElement.textContent = "PERDU!";
+      }
+      
+      // Changer le texte du bouton pour commencer un nouveau loto
+      document.getElementById('createNewLotoBtn').textContent = "Créez votre propre Loto";
+      
+      // Afficher le résultat
+      resultElement.style.display = "flex";
+    }
+
+    // Fonction pour réinitialiser l'application complètement
+    function reinitialiserApplication() {
+      // Fermer le résultat du tirage
+      document.getElementById('tirageResult').style.display = "none";
+      
+      // Fermer la modal du ticket
+      document.getElementById('ticketModal').style.display = "none";
+      
+      // Réinitialiser tous les champs
+      document.getElementById('nomUtilisateur').value = "";
+      document.getElementById('joueurs').value = "";
+      document.getElementById('prixParJoueur').value = "";
+      document.getElementById('jackpot').value = "";
+      document.getElementById('probJackpot').value = "";
+      
+      // Réinitialiser les variables
+      jackpotProvisionne = false;
+      compteurJoueurs = 1;
+      probaGagner = 0;
+      
+      // Réinitialiser les résultats affichés
+      document.getElementById('resultat').textContent = "";
+      document.getElementById('pertes').textContent = "";
+      document.getElementById('ratioAffichage').innerHTML = "";
+      
+      // Réinitialiser les boutons
+      document.getElementById('provisionnerBtn').style.display = "none";
+      document.getElementById('validerBtn').disabled = true;
+      document.getElementById('validerBtn').classList.remove('visible');
+      document.getElementById('validerInfo').style.display = "block";
+      
+      // Fermer tout popup
+      document.getElementById('popup').style.display = "none";
+      
+      // Masquer tous les champs sauf le nom
+      document.getElementById('rowJoueurs').classList.remove('visible');
+      document.getElementById('rowPrix').classList.remove('visible');
+      document.getElementById('rowJackpot').classList.remove('visible');
+      document.getElementById('probSection').classList.remove('visible');
+      
+      // Ne pas réafficher l'invitation si elle a déjà été jouée
+      if (!invitationJouee) {
+        // Si l'invitation n'a pas été jouée, la réafficher
+        document.getElementById('invitationScreen').style.display = "flex";
+      }
+    }
+
+    // Fonction pour basculer entre les boutons du ticket
+    function toggleTicketButtons() {
+      const payerBtn = document.getElementById('payerBtn');
+      const jouerBtn = document.getElementById('jouerBtn');
+      const compteurElement = document.getElementById('compteurJoueurs');
+      const maxJoueurs = parseFloat(document.getElementById("joueurs").value);
+      
+      // Si on a déjà atteint le nombre max de joueurs, ne rien faire
+      if (compteurJoueurs >= maxJoueurs) {
+        return;
+      }
+      
+      if (payerBtn.classList.contains('btn-active')) {
+        // Incrémenter le compteur de joueurs
+        compteurJoueurs++;
+        
+        // Mettre à jour l'affichage du compteur
+        compteurElement.textContent = `${compteurJoueurs} joueurs (max ${maxJoueurs} joueurs)`;
+        
+        // Vérifier si le maximum est atteint
+        if (compteurJoueurs >= maxJoueurs) {
+          // Désactiver définitivement le bouton "payer"
+          payerBtn.classList.remove('btn-active');
+          payerBtn.classList.add('btn-inactive');
+          payerBtn.disabled = true;
+          
+          // Activer le bouton "jouer"
+          jouerBtn.classList.remove('btn-inactive');
+          jouerBtn.classList.add('btn-active');
+          jouerBtn.disabled = false;
+          
+          // Afficher un message dans le popup
+          showPopup("Nombre maximum de joueurs atteint ! Le loto est complet.");
+          return;
+        }
+        
+        // Désactiver payer, activer jouer
+        payerBtn.classList.remove('btn-active');
+        payerBtn.classList.add('btn-inactive');
+        payerBtn.disabled = true;
+        
+        jouerBtn.classList.remove('btn-inactive');
+        jouerBtn.classList.add('btn-active');
+        jouerBtn.disabled = false;
+      } else {
+        // Désactiver jouer, activer payer (seulement si on n'a pas atteint le max)
+        jouerBtn.classList.remove('btn-active');
+        jouerBtn.classList.add('btn-inactive');
+        jouerBtn.disabled = true;
+        
+        payerBtn.classList.remove('btn-inactive');
+        payerBtn.classList.add('btn-active');
+        payerBtn.disabled = false;
+      }
+    }
+
+    // Fonction principale de calcul
+    function calculer() {
+      const n = parseFloat(document.getElementById("joueurs").value);
+      const probPourcentage = parseFloat(document.getElementById("probJackpot").value);
+      const prix = parseFloat(document.getElementById("prixParJoueur").value);
+      const jackpot = parseFloat(document.getElementById("jackpot").value);
+
+      const provisionnerBtn = document.getElementById("provisionnerBtn");
+      const validerBtn = document.getElementById("validerBtn");
+      const validerInfo = document.getElementById("validerInfo");
+      const ratioAffichage = document.getElementById("ratioAffichage");
+
+      // Affichage du ratio de probabilité
+      if (!isNaN(probPourcentage) && probPourcentage > 0) {
+        const fraction = 100 / probPourcentage;
+        const arrondiFraction = Math.round(fraction * 10) / 10;
+        ratioAffichage.innerHTML = `soit 1 chance sur <strong>${arrondiFraction}</strong>`;
+      } else {
+        ratioAffichage.innerHTML = "";
+      }
+
+      // Affichage ou non du bouton de provisionnement
+      provisionnerBtn.style.display = !jackpotProvisionne && !isNaN(jackpot) && jackpot > 0 ? "inline-block" : "none";
+
+      // Validation des entrées
+      if (
+        isNaN(n) || isNaN(probPourcentage) || isNaN(prix) || isNaN(jackpot) ||
+        n <= 0 || probPourcentage <= 0 || probPourcentage > 100 || prix < 0 || jackpot < 0
+      ) {
+        document.getElementById("resultat").textContent = "renseigne tous les champs";
+        document.getElementById("pertes").textContent = "";
+        validerBtn.disabled = true;
+        validerBtn.classList.remove('visible');
+        validerInfo.style.display = "block";
+        return;
+      }
+
+      // Calculs des probabilités
+      const P = probPourcentage / 100;
+      const p_indiv = 1 - Math.pow(1 - P, 1 / n);
+      probaGagner = p_indiv; // Stockage de la probabilité individuelle pour le tirage
+      const fractionIndiv = 1 / p_indiv;
+
+      const p_euromillion = 1 / 139838160;
+      const comparaison = p_indiv / p_euromillion;
+
+      let comparaisonTexte = '';
+      if (comparaison >= 1) {
+        comparaisonTexte = `environ ${Math.round(comparaison).toLocaleString()} fois plus probable qu'un jackpot à l'Euromillion`;
+      } else {
+        comparaisonTexte = `environ ${(1 / comparaison).toFixed(1)} fois moins probable qu'un jackpot à l'Euromillion`;
+      }
+
+      // Affichage des résultats
+      document.getElementById("resultat").innerHTML =
+        `🌟 Chaque joueur a environ <strong>${(p_indiv * 100).toFixed(5)} %</strong> de chance de gagner ` +
+        `(soit environ 1 sur <strong>${Math.round(fractionIndiv)}</strong>, ${comparaisonTexte}).`;
+
+      const total = prix * n;
+      const pourMathieu = total * 0.01;
+      const reste = total - pourMathieu;
+      const sucreJackpot = jackpot * 0.01;
+
+      document.getElementById("pertes").innerHTML =
+        `💰 Si tous tes amis perdent tu gagnes : <strong>${reste.toFixed(2)} 🍌</strong>`;
+
+     /* showPopup(
+        `🍐 Pour Mathieu : ${pourMathieu.toFixed(2)} poires<br>` +
+        `🎊 En cas de jackpot Mathieu se sucre ${sucreJackpot.toFixed(2)} poires`
+      );*/
+
+      // État du bouton valider
+      validerBtn.disabled = !jackpotProvisionne;
+      if (jackpotProvisionne) {
+        validerBtn.classList.add('visible');
+      } else {
+        validerBtn.classList.remove('visible');
+      }
+      validerInfo.style.display = validerBtn.disabled ? "block" : "none";
+    }
+
+    // Gestion du provisionnement du jackpot
+    document.getElementById("provisionnerBtn").addEventListener("click", () => {
+      const jackpotField = document.getElementById("jackpot");
+      const jackpot = parseFloat(jackpotField.value);
+      
+      if (!isNaN(jackpot) && jackpot > 0) {
+        const sucreJackpot = jackpot * 0.01;
+        jackpotField.value = (jackpot - sucreJackpot).toFixed(2);
+        jackpotProvisionne = true;
+        
+        // Mise à jour de l'interface
+        document.getElementById("provisionnerBtn").style.display = "none";
+        document.getElementById("validerBtn").disabled = false;
+        document.getElementById("validerBtn").classList.add('visible');
+        document.getElementById("validerInfo").style.display = "none";
+        
+        // Afficher la section de probabilité
+        document.getElementById('probSection').classList.add('visible');
+        
+        calculer();
+      }
+    });
+
+    // Gestion du bouton valider
+    document.getElementById("validerBtn").addEventListener("click", () => {
+      // Réinitialiser le compteur de joueurs
+      compteurJoueurs = 1;
+      const n = parseFloat(document.getElementById("joueurs").value);
+      const probPourcentage = parseFloat(document.getElementById("probJackpot").value);
+      const prix = parseFloat(document.getElementById("prixParJoueur").value);
+      const jackpot = parseFloat(document.getElementById("jackpot").value);
+      const nomUtilisateur = document.getElementById('nomUtilisateur').value || 'toi';
+
+      // Calculs des probabilités et profits
+      const P = probPourcentage / 100;
+      const p_indiv = 1 - Math.pow(1 - P, 1 / n);
+      probaGagner = p_indiv; // Mise à jour de la probabilité de gagner
+      const fractionIndiv = 1 / p_indiv;
+      const probIndivPourcent = (p_indiv * 100).toFixed(5);
+
+      const p_euromillion = 1 / 139838160;
+      const comparaison = p_indiv / p_euromillion;
+
+      const comparaisonTexte =
+        comparaison >= 1
+          ? `environ ${Math.round(comparaison).toLocaleString()} fois plus probable qu'un jackpot à l'Euromillion`
+          : `environ ${(1 / comparaison).toFixed(1)} fois moins probable qu'un jackpot à l'Euromillion`;
+
+      const total = prix * n;
+      const pourMathieu = total * 0.01;
+      const reste = total - pourMathieu;
+
+      // Création du contenu du ticket
+const ticketContent = document.getElementById("ticketContent");
+ticketContent.innerHTML = `
+  <div class="ticket">
+    <h2>🎟️ Le loto à ${nomUtilisateur}</h2>
+    <div class="line">👥 <strong>${n} joueurs max</strong></div>
+    <div class="line">🍐 Prix par joueur : <strong>${prix.toFixed(2)} poires</strong></div>
+    <div class="line">💰 Jackpot : <strong>${jackpot.toFixed(2)} poires</strong></div>
+    <div class="line">🎯 Probabilité que le jackpot soit remporté : <strong>${probPourcentage}%</strong></div>
+    <div class="line">🧮 Tes chances de gagner sont de : <strong>${probIndivPourcent}%</strong> (1 sur ${Math.round(fractionIndiv)})</div>
+    <div class="line">📊 C'est <em>${comparaisonTexte}</em></div>
+    <hr>
+    <div class="line">💸 ${nomUtilisateur} gagne <strong>${reste.toFixed(2)} bananes</strong> si vous perdez tous</div>
+    <div class="line" style="font-size: 0.7rem; color: #888; text-align: center;">Mathieu se sucre 1% à chaque opération</div>
+
+    <h3 style="margin-top: 2rem; text-align: center; color: #0984e3;">🎉 Ton loto est prêt à être partagé ! 🎉</h3>
+    
+    <div style="margin-top: 1rem; font-size: 1.1rem; text-align: center;">
+      <p>Copie ce lien et partage-le avec tes amis :</p>
+      <div class="share-link-container" style="padding: 10px; margin: 1rem auto;">
+        <input type="text" id="partageLien" readonly class="share-link" 
+          value="www.partage-le-loto-a-${nomUtilisateur.replace(/\s+/g, '-').toLowerCase()}" 
+          onclick="this.select();">
+      </div>
+      <button id="copyLinkBtn" style="margin-top: 0.5rem;" class="btn-active">Copier le lien</button>
+    </div>
+    
+    <p style="margin-top: 2rem; text-align: center; font-weight: bold;">Félicitations ! Ton loto est maintenant prêt à être partagé. 🎮</p>
+  </div>
+`;
+
+// 2. Supprimer le bouton de fermeture (croix rouge) de la modale ticket
+document.querySelector('#ticketModal .close-btn').style.display = 'none';
+
+// 3. Ajouter la fonctionnalité de copie du lien au presse-papier
+document.getElementById('copyLinkBtn').addEventListener('click', function() {
+  const linkInput = document.getElementById('partageLien');
+  linkInput.select();
+  document.execCommand('copy');
+  
+  // Afficher un retour visuel
+  this.textContent = "✓ Lien copié !";
+  this.style.backgroundColor = "#27ae60";
+  
+  setTimeout(() => {
+    this.textContent = "Copier le lien";
+    this.style.backgroundColor = "#0984e3";
+  }, 2000);
+});
+
+// 4. S'assurer que la modale ne peut pas être fermée
+document.getElementById('ticketModal').addEventListener('click', function(e) {
+  // Empêcher la fermeture en cliquant à l'extérieur
+  if (e.target === this) {
+    e.stopPropagation();
+  }
+});
+      
+      // Afficher la modale
+      document.getElementById("ticketModal").style.display = "block";
+    });
+
+    // Réinitialiser le provisionnement si le jackpot est modifié
+    document.getElementById("jackpot").addEventListener("input", () => {
+      jackpotProvisionne = false;
+      document.getElementById("provisionnerBtn").style.display = "inline-block";
+      document.getElementById("validerBtn").disabled = true;
+      document.getElementById("validerBtn").classList.remove('visible');
+      document.getElementById("validerInfo").style.display = "block";
+      calculer();
+    });
+
+    // Gestion de l'apparition progressive des champs
+    document.getElementById("nomUtilisateur").addEventListener("input", function() {
+      if (this.value.trim() !== "") {
+        document.getElementById("rowJoueurs").classList.add("visible");
+      } else {
+        document.getElementById("rowJoueurs").classList.remove("visible");
+        document.getElementById("rowPrix").classList.remove("visible");
+        document.getElementById("rowJackpot").classList.remove("visible");
+        document.getElementById("probSection").classList.remove("visible");
+      }
+    });
+
+    document.getElementById("joueurs").addEventListener("input", function() {
+      if (this.value.trim() !== "") {
+        document.getElementById("rowPrix").classList.add("visible");
+      } else {
+        document.getElementById("rowPrix").classList.remove("visible");
+        document.getElementById("rowJackpot").classList.remove("visible");
+        document.getElementById("probSection").classList.remove("visible");
+      }
+    });
+
+    document.getElementById("prixParJoueur").addEventListener("input", function() {
+      if (this.value.trim() !== "") {
+        document.getElementById("rowJackpot").classList.add("visible");
+      } else {
+        document.getElementById("rowJackpot").classList.remove("visible");
+        document.getElementById("probSection").classList.remove("visible");
+      }
+    });
+
+    // Écouter les changements sur tous les champs pour le calcul
+    const inputs = document.querySelectorAll("#joueurs, #prixParJoueur, #jackpot, #probJackpot, #nomUtilisateur");
+    inputs.forEach(input => {
+      input.addEventListener("input", calculer);
+    });
+    
+    // Ajouter l'événement pour réinitialiser l'application
+    document.getElementById("createNewLotoBtn").addEventListener("click", reinitialiserApplication);
+    
+    // Initialiser les calculs au chargement et afficher l'écran d'invitation
+    window.addEventListener("load", () => {
+      // Afficher l'écran d'invitation au chargement de la page
+      document.getElementById('invitationScreen').style.display = "flex";
+      invitationAffichee = true;
+      
+      // Initialiser les calculs et le compteur
+      compteurJoueurs = 1;
+      calculer();
+    });
+    // Ajouter la gestion du défilement pour masquer l'indicateur
+    
+window.addEventListener('scroll', function() {
+  if (window.scrollY > 50) {
+    document.getElementById('scrollIndicator').style.opacity = '0';
+    setTimeout(function() {
+      document.getElementById('scrollIndicator').style.display = 'none';
+    }, 500);
+  }
+});
+  </script>
+
+</body>
+</html>
